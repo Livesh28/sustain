@@ -1,0 +1,6 @@
+{
+  "name": "Leviathan",
+  "description": "AI-Powered Sustainability Intelligence & Product Recommendation Platform",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
