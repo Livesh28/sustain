@@ -1,6 +1,6 @@
 import React from 'react';
 import { UserRole, UserProfile } from '../types';
-import { Leaf, Search, Brain, Database, BarChart3, Settings, Scale, Heart, User, Sparkles, Filter, ShieldCheck, TreePine, Building2, Gift, ShoppingBag, Calculator } from 'lucide-react';
+import { Leaf, Search, Brain, Database, BarChart3, Settings, Scale, Heart, User, Sparkles, Filter, ShieldCheck, TreePine, Building2, Gift, ShoppingBag, Calculator, Play } from 'lucide-react';
 
 interface Props {
   activeView: 'catalog' | 'compare' | 'ai_assistant' | 'pipelines' | 'analytics' | 'admin' | 'scope3_fleet' | 'carbon_offset';
@@ -16,6 +16,8 @@ interface Props {
   onOpenProfile: () => void;
   onOpenCart: () => void;
   onOpenSwapCalculator: () => void;
+  onOpenGuidedTour: () => void;
+  onOpenSecurityModal?: () => void;
   onSelectRole: (role: UserRole) => void;
 }
 
@@ -33,6 +35,8 @@ export const Navbar: React.FC<Props> = ({
   onOpenProfile,
   onOpenCart,
   onOpenSwapCalculator,
+  onOpenGuidedTour,
+  onOpenSecurityModal,
   onSelectRole
 }) => {
   const categories = [
@@ -118,6 +122,16 @@ export const Navbar: React.FC<Props> = ({
             </select>
           </div>
 
+          {/* How It Works Interactive Tour Trigger */}
+          <button
+            onClick={onOpenGuidedTour}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-[#D4A373]/15 hover:bg-[#D4A373]/30 border border-[#D4A373]/40 text-[#2C3333] font-bold text-xs rounded-xl transition-colors cursor-pointer shadow-2xs"
+            title="Interactive Walkthrough - How It Works"
+          >
+            <Play className="w-3.5 h-3.5 fill-[#D4A373] text-[#D4A373]" />
+            <span className="hidden sm:inline">How It Works</span>
+          </button>
+
           {/* Household Plastic Audit Calculator Trigger */}
           <button
             onClick={onOpenSwapCalculator}
@@ -127,6 +141,18 @@ export const Navbar: React.FC<Props> = ({
             <Calculator className="w-3.5 h-3.5" />
             <span>Plastic Audit</span>
           </button>
+
+          {/* Security & Data Governance Trigger */}
+          {onOpenSecurityModal && (
+            <button
+              onClick={onOpenSecurityModal}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-[#2C3333] hover:bg-[#3D4646] text-white font-bold text-xs rounded-xl transition-colors cursor-pointer shadow-2xs border border-[#5F7161]/40"
+              title="Security, Privacy & Product Passport Governance"
+            >
+              <ShieldCheck className="w-3.5 h-3.5 text-[#D4A373]" />
+              <span className="hidden md:inline">Security Center</span>
+            </button>
+          )}
 
           {/* Cart Drawer Trigger */}
           <button

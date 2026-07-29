@@ -14,6 +14,8 @@ import { Scope3FleetCalculator } from './components/Scope3FleetCalculator';
 import { CarbonOffsetMarketplace } from './components/CarbonOffsetMarketplace';
 import { CartDrawerModal, CartItem } from './components/CartDrawerModal';
 import { HouseholdSwapCalculatorModal } from './components/HouseholdSwapCalculatorModal';
+import { GuidedTourModal } from './components/GuidedTourModal';
+import { SecurityGovernanceModal } from './components/SecurityGovernanceModal';
 import { Filter, SlidersHorizontal, Leaf, Sparkles, CheckCircle2, ShieldCheck, Scale, AlertCircle } from 'lucide-react';
 
 export function App() {
@@ -42,6 +44,30 @@ export function App() {
   ]);
   const [showCartModal, setShowCartModal] = useState(false);
   const [showSwapCalculatorModal, setShowSwapCalculatorModal] = useState(false);
+  const [showGuidedTourModal, setShowGuidedTourModal] = useState(false);
+  const [showSecurityModal, setShowSecurityModal] = useState(false);
+
+  const handleStartTourAction = (stepIndex: number) => {
+    switch (stepIndex) {
+      case 0:
+        setActiveView('catalog');
+        break;
+      case 1:
+        setShowSwapCalculatorModal(true);
+        break;
+      case 2:
+        setShowCartModal(true);
+        break;
+      case 3:
+        setActiveView('ai_assistant');
+        break;
+      case 4:
+        setActiveView('scope3_fleet');
+        break;
+      default:
+        setActiveView('catalog');
+    }
+  };
 
   const handleAddToCart = (product: Product) => {
     setCartItems(prev => {
@@ -306,6 +332,8 @@ export function App() {
         onOpenProfile={() => setShowProfileModal(true)}
         onOpenCart={() => setShowCartModal(true)}
         onOpenSwapCalculator={() => setShowSwapCalculatorModal(true)}
+        onOpenGuidedTour={() => setShowGuidedTourModal(true)}
+        onOpenSecurityModal={() => setShowSecurityModal(true)}
         onSelectRole={(role) => {
           setUserProfile(prev => ({ ...prev, role }));
           showToast(`Switched persona view to: ${role}`);
@@ -557,6 +585,22 @@ export function App() {
         onClose={() => setShowSwapCalculatorModal(false)}
         products={products}
         onAddToCartBatch={handleAddToCartBatch}
+      />
+
+      {/* Guided Walkthrough Tour Modal */}
+      <GuidedTourModal
+        isOpen={showGuidedTourModal}
+        onClose={() => setShowGuidedTourModal(false)}
+        onStartStepAction={handleStartTourAction}
+      />
+
+      {/* Security & Data Governance Modal */}
+      <SecurityGovernanceModal
+        isOpen={showSecurityModal}
+        onClose={() => setShowSecurityModal(false)}
+        userProfile={userProfile}
+        products={products}
+        onShowToast={showToast}
       />
 
       {/* User Profile Modal */}

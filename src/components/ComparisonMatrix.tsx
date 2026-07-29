@@ -1,6 +1,6 @@
 import React from 'react';
 import { Product } from '../types';
-import { Trophy, Leaf, Cloud, Check, X, Award, Wrench, Shield, ArrowRight } from 'lucide-react';
+import { Trophy, Leaf, Cloud, Check, X, Award, Wrench, Shield, ArrowRight, BarChart3 } from 'lucide-react';
 
 interface Props {
   products: Product[];
@@ -44,7 +44,7 @@ export const ComparisonMatrix: React.FC<Props> = ({
             Multi-Product Sustainability Comparison Matrix
           </h2>
           <p className="text-xs text-[#5F7161] italic mt-0.5">
-            Comparing {products.length} eco-audited products side-by-side
+            Comparing {products.length} eco-audited products side-by-side • Team Leviathan Decision Intelligence
           </p>
         </div>
 
@@ -54,6 +54,56 @@ export const ComparisonMatrix: React.FC<Props> = ({
         >
           Clear All Selected
         </button>
+      </div>
+
+      {/* Slide 8 Benchmarks: Comparative Performance Metrics */}
+      <div className="bg-[#F5F2ED]/90 border border-[#E1D7C6] rounded-2xl p-4 space-y-3">
+        <div className="flex items-center justify-between">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-[#5F7161] flex items-center gap-1.5">
+            <BarChart3 className="w-4 h-4 text-[#D4A373]" /> Comparative Performance Metrics (Eco Benchmark Index)
+          </h3>
+          <span className="text-[10px] bg-[#5F7161]/10 text-[#5F7161] font-bold px-2.5 py-0.5 rounded-full border border-[#5F7161]/20">
+            Leviathan Decision Engine
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div className="bg-white p-3 rounded-xl border border-[#E1D7C6] space-y-1.5">
+            <div className="flex justify-between text-xs font-bold text-[#2C3333]">
+              <span>Standard vs Eco Detergent</span>
+              <span className="text-[#5F7161]">92% Eco Score</span>
+            </div>
+            <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden flex">
+              <div className="bg-gray-400 h-full" style={{ width: '35%' }} title="Standard Detergent (35%)"></div>
+              <div className="bg-[#5F7161] h-full" style={{ width: '57%' }} title="Eco Detergent (+57%)"></div>
+            </div>
+            <p className="text-[10px] text-gray-500">Standard Detergent: 35% vs Eco Detergent: 92% (+57% CO₂ reduction)</p>
+          </div>
+
+          <div className="bg-white p-3 rounded-xl border border-[#E1D7C6] space-y-1.5">
+            <div className="flex justify-between text-xs font-bold text-[#2C3333]">
+              <span>Regular vs Recycled Sneakers</span>
+              <span className="text-[#5F7161]">95% Eco Score</span>
+            </div>
+            <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden flex">
+              <div className="bg-gray-400 h-full" style={{ width: '30%' }} title="Regular Sneakers (30%)"></div>
+              <div className="bg-[#5F7161] h-full" style={{ width: '65%' }} title="Recycled Sneakers (+65%)"></div>
+            </div>
+            <p className="text-[10px] text-gray-500">Regular Sneakers: 30% vs Recycled Sneakers: 95% (+65% CO₂ reduction)</p>
+          </div>
+
+          <div className="bg-white p-3 rounded-xl border border-[#E1D7C6] space-y-1.5">
+            <div className="flex justify-between text-xs font-bold text-[#2C3333]">
+              <span>Plastic Bottle vs Sustainable Packaging</span>
+              <span className="text-[#5F7161]">100% Eco Score</span>
+            </div>
+            <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden flex">
+              <div className="bg-gray-400 h-full" style={{ width: '20%' }} title="Plastic Bottle (20%)"></div>
+              <div className="bg-[#5F7161] h-full" style={{ width: '80%' }} title="Sustainable Packaging (+80%)"></div>
+            </div>
+            <p className="text-[10px] text-gray-500">Plastic Bottle: 20% vs Sustainable Packaging: 100% (Zero Plastic)</p>
+          </div>
+        </div>
       </div>
 
       {/* Comparison Table */}
