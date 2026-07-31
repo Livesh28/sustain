@@ -89,12 +89,13 @@ export const AIRecommendationAssistant: React.FC<Props> = ({ products, onSelectP
   };
 
   return (
-    <div className="bg-white rounded-[32px] border border-[#E1D7C6] p-6 shadow-xs space-y-6">
+    <div className="relative overflow-hidden glass-panel rounded-[32px] p-8 space-y-6 transition-all duration-500 hover:shadow-2xl hover:shadow-[#8D9971]/10 group">
+      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#8D9971] to-transparent opacity-50"></div>
       
       {/* Header */}
-      <div className="flex items-center gap-3 border-b border-[#E1D7C6] pb-4">
-        <div className="p-3 bg-[#F1F1E6] text-[#5F7161] rounded-2xl border border-[#E1D7C6]">
-          <Brain className="w-6 h-6 text-[#5F7161]" />
+      <div className="flex items-center gap-4 border-b border-[#E1D7C6]/50 pb-5">
+        <div className="p-3.5 bg-gradient-to-br from-[#8D9971] to-[#5F7161] text-white rounded-2xl shadow-lg animate-pulse-glow">
+          <Brain className="w-7 h-7" />
         </div>
         <div>
           <h2 className="text-2xl font-serif font-bold text-[#2C3333] flex items-center gap-2">
@@ -125,10 +126,10 @@ export const AIRecommendationAssistant: React.FC<Props> = ({ products, onSelectP
           <button
             onClick={() => handleGenerateRecommendations()}
             disabled={loading}
-            className="absolute right-2 bg-[#5F7161] hover:bg-[#6D8B74] text-white font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-1.5 transition-all shadow-xs disabled:opacity-50 cursor-pointer"
+            className="absolute right-2 top-2 bottom-2 bg-gradient-to-r from-[#5F7161] to-[#4A5D4E] hover:from-[#4A5D4E] hover:to-[#364939] text-white font-bold px-5 py-2 rounded-xl text-xs flex items-center gap-2 transition-all shadow-md hover:shadow-lg disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer"
           >
-            {loading ? <Brain className="w-4 h-4 animate-spin text-[#EFEAD8]" /> : <Sparkles className="w-4 h-4 text-[#EFEAD8]" />}
-            {loading ? 'Analyzing...' : 'Generate AI Match'}
+            {loading ? <Search className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+            {loading ? 'Searching Web & Auditing...' : 'Generate AI Match'}
           </button>
         </div>
 
@@ -149,9 +150,9 @@ export const AIRecommendationAssistant: React.FC<Props> = ({ products, onSelectP
 
       {/* Output Results */}
       {aiSummary && (
-        <div className="p-4 bg-[#F1F1E6] border border-[#E1D7C6] rounded-2xl text-xs text-[#2C3333] leading-relaxed">
-          <strong className="font-serif font-bold text-sm flex items-center gap-1.5 mb-1 text-[#5F7161]">
-            <CheckCircle2 className="w-4 h-4 text-[#8D9971]" /> Gemini AI Decision Synthesis:
+        <div className="p-5 bg-gradient-to-r from-[#F1F1E6]/80 to-white/60 border border-[#E1D7C6]/60 rounded-2xl text-sm text-[#2C3333] leading-relaxed shadow-sm backdrop-blur-sm animate-in fade-in slide-in-from-bottom-2 duration-500">
+          <strong className="font-serif font-bold text-base flex items-center gap-2 mb-2 text-[#5F7161]">
+            <CheckCircle2 className="w-5 h-5 text-[#8D9971]" /> Gemini External Intelligence & Decision Synthesis:
           </strong>
           {aiSummary}
         </div>
@@ -165,23 +166,39 @@ export const AIRecommendationAssistant: React.FC<Props> = ({ products, onSelectP
 
           <div className="space-y-6">
             {recommendations.map((rec) => {
-              const matchedProd = products.find(p => p.id === rec.productId) || products[0];
+              const matchedProd = products.find(p => p.id === rec.productId);
+              const isExternal = !matchedProd;
+              
+              const displayTitle = isExternal ? rec.productTitle : matchedProd.title;
+              const displayBrand = isExternal ? 'External Web Result' : matchedProd.brand;
+              const displayPrice = isExternal ? 'Est. Price Varies' : `${matchedProd.currency}${matchedProd.price}`;
+              const displayImage = isExternal 
+                ? 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=800&q=80' 
+                : matchedProd.imageUrl;
+
               return (
                 <div key={rec.productId} className="space-y-3">
                   <div className="flex items-center justify-between bg-[#F5F2ED] p-3.5 rounded-2xl border border-[#E1D7C6]">
                     <div className="flex items-center gap-3">
-                      <img src={matchedProd.imageUrl} alt={matchedProd.title} className="w-12 h-12 rounded-xl object-cover border border-[#E1D7C6]" />
+                      <img src={displayImage} alt={displayTitle} className="w-12 h-12 rounded-xl object-cover border border-[#E1D7C6]" />
                       <div>
-                        <h4 className="font-serif font-bold text-[#2C3333] text-base">{matchedProd.title}</h4>
-                        <span className="text-xs text-[#5F7161] font-semibold">{matchedProd.brand} • {matchedProd.currency}{matchedProd.price}</span>
+                        <h4 className="font-serif font-bold text-[#2C3333] text-base">
+                          {displayTitle} {isExternal && <span className="text-[10px] ml-2 bg-[#D4A373] text-white px-2 py-0.5 rounded-full uppercase tracking-wider">Web Source</span>}
+                        </h4>
+                        <span className="text-xs text-[#5F7161] font-semibold">{displayBrand} • {displayPrice}</span>
                       </div>
                     </div>
 
                     <button
-                      onClick={() => onSelectProduct(matchedProd)}
-                      className="bg-[#5F7161] hover:bg-[#6D8B74] text-white text-xs font-semibold px-3 py-2 rounded-xl transition-colors flex items-center gap-1 shadow-xs cursor-pointer"
+                      onClick={() => !isExternal && onSelectProduct(matchedProd)}
+                      disabled={isExternal}
+                      className={`text-xs font-semibold px-3 py-2 rounded-xl transition-colors flex items-center gap-1 shadow-xs ${
+                        isExternal 
+                          ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                          : 'bg-[#5F7161] hover:bg-[#6D8B74] text-white cursor-pointer'
+                      }`}
                     >
-                      View Product <ChevronRight className="w-3.5 h-3.5" />
+                      {isExternal ? 'External Link' : 'View Product'} {!isExternal && <ChevronRight className="w-3.5 h-3.5" />}
                     </button>
                   </div>
 

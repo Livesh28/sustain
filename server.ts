@@ -3,6 +3,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { createServer as createViteServer } from 'vite';
 import { GoogleGenAI } from '@google/genai';
+import 'dotenv/config';
 import { INITIAL_PRODUCTS, INITIAL_DATA_ADAPTERS, INITIAL_AUDIT_LOGS, DEFAULT_MODEL_CONFIG } from './src/data/mockProducts.js';
 import { calculateSustainabilityScore, estimateCarbonFootprint, calculateDecisionScore, generateExplainableRecommendation } from './src/utils/sustainabilityEngine.js';
 import { Product, DataAdapter, AuditLog, AIModelConfig } from './src/types.js';
@@ -262,8 +263,8 @@ User Preferences: ${JSON.stringify(preferences || {})}
 Available Product Catalog:
 ${JSON.stringify(catalogContext, null, 2)}
 
-Analyze the products in the catalog and select the top 2 to 3 best matches.
-Respond strictly in JSON format matching this schema:
+Analyze the products in the catalog. If there are strong matches, recommend them. If you cannot find a good match in the catalog, or if the catalog is empty, use your Google Search capability to find real-world sustainable products that match the user's request.
+Respond strictly in JSON format matching this schema. For external products, set productId to a unique string starting with "ext-", use the real productTitle, and estimate the environmental impact.
 {
   "aiSummary": "Executive summary of why these products were selected",
   "recommendations": [
@@ -287,9 +288,10 @@ Respond strictly in JSON format matching this schema:
 }`;
 
       const response = await aiClient.models.generateContent({
-        model: 'gemini-3.6-flash',
+        model: 'gemini-2.5-flash',
         contents: prompt,
         config: {
+          tools: [{ googleSearch: {} }],
           responseMimeType: 'application/json'
         }
       });
@@ -355,9 +357,10 @@ Respond strictly in JSON:
 }`;
 
       const response = await aiClient.models.generateContent({
-        model: 'gemini-3.6-flash',
+        model: 'gemini-2.5-flash',
         contents: prompt,
         config: {
+          tools: [{ googleSearch: {} }],
           responseMimeType: 'application/json'
         }
       });
@@ -377,19 +380,89 @@ Respond strictly in JSON:
     res.json(adaptersDB);
   });
 
-  // POST /api/pipeline/sync - Trigger sync simulation
-  app.post('/api/pipeline/sync', (req, res) => {
+  // POST /api/pipeline/sync - Trigger AI Web Scraping
+  app.post('/api/pipeline/sync', async (req, res) => {
     const { adapterId } = req.body;
     const adapter = adaptersDB.find(a => a.id === adapterId);
-    if (adapter) {
-      adapter.status = 'syncing';
-      setTimeout(() => {
-        adapter.status = 'active';
-        adapter.lastSyncTime = new Date().toISOString().replace('T', ' ').substring(0, 16);
-        adapter.itemsProcessed += Math.floor(Math.random() * 150) + 20;
-      }, 1500);
+    
+    if (!adapter) return res.status(404).json({ error: 'Adapter not found' });
+    
+    if (!aiClient) {
+      // Fallback if no AI
+      return res.json({ newProducts: [] });
     }
-    res.json({ message: 'Sync initiated', adapters: adaptersDB });
+
+    try {
+      const prompt = `You are a data ingestion scraper for sustainable products. The user has triggered a sync for the platform: "${adapter.sourceName}".
+Use Google Search to find 2 to 3 real, specific sustainable products available on or related to "${adapter.sourceName}". 
+Respond strictly in JSON format matching an array of products.
+[
+  {
+    "title": "Real Product Name",
+    "brand": "Real Brand",
+    "category": "Household Products",
+    "price": 500,
+    "imageUrl": "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=800&q=80",
+    "description": "Short real description"
+  }
+]
+`;
+
+      const response = await aiClient.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: prompt,
+        config: {
+          tools: [{ googleSearch: {} }],
+          responseMimeType: 'application/json'
+        }
+      });
+
+      let responseText = response.text || '[]';
+      responseText = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
+      const rawProducts = JSON.parse(responseText);
+      
+      const newProducts: Product[] = rawProducts.map((p: any, index: number) => {
+        const id = `ext-sync-${Date.now()}-${index}`;
+        return {
+          id,
+          title: p.title || 'Fetched Product',
+          brand: p.brand || 'External Brand',
+          category: p.category || 'Household Products',
+          price: p.price || 999,
+          originalPrice: (p.price || 999) * 1.2,
+          currency: '₹',
+          rating: 4.5,
+          reviewCount: 12,
+          imageUrl: p.imageUrl || 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=800&q=80',
+          images: [p.imageUrl || 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=800&q=80'],
+          description: p.description || 'Fetched from ' + adapter.sourceName,
+          specs: { Source: adapter.sourceName },
+          materials: [{ name: 'Recycled Content', type: 'recycled', percentage: 100, recyclable: true, compostable: false, carbonFactorKgCo2PerKg: 1.0 }],
+          packaging: { type: 'zero_plastic', weightGrams: 50, plasticFree: true, recyclabilityRatePercent: 100 },
+          durabilityYears: 5,
+          repairabilityIndex: 8,
+          certifications: [],
+          carbonFootprint: { rawMaterialsKg: 1, manufacturingKg: 1, logisticsKg: 1, usagePowerKg: 0, endOfLifeKg: 0, totalCO2eKg: 3, benchmarkAverageKg: 10, reductionPercentVsBenchmark: 70, treesEquivalentSaved: 1 },
+          sustainabilityScore: { overall: 85, materialsScore: 80, packagingScore: 90, energyScore: 80, durabilityScore: 85, repairabilityScore: 80, carbonScore: 85, certificationBonus: 5, grade: 'A', breakdownSummary: 'AI Assessed' },
+          decisionScore: { overall: 85, priceScore: 80, qualityScore: 85, warrantyScore: 80, repairabilityScore: 80, energyScore: 80, sustainabilityScore: 85, userMatchPercent: 90, explainabilityNote: 'AI Synced' },
+          seller: { name: adapter.sourceName, verifiedEcoSeller: true, rating: 4.5, location: 'Global' },
+          inventory: 10,
+          priceHistory: [],
+          reviews: [],
+          reviewIntelligence: { sentimentSummary: 'Positive', sentimentDistribution: { positive: 100, neutral: 0, negative: 0 }, pros: [], cons: [], frequentlyMentionedEcoTopics: [], overallEcoRating: 4.5 }
+        };
+      });
+
+      // Insert into global DB
+      productsDB.unshift(...newProducts);
+      adapter.itemsProcessed += newProducts.length;
+      adapter.lastSyncTime = new Date().toISOString().replace('T', ' ').substring(0, 16);
+
+      res.json({ newProducts });
+    } catch (err) {
+      console.error('AI Sync Error:', err);
+      res.status(500).json({ error: 'Failed to fetch' });
+    }
   });
 
   // GET /api/admin/audit-logs

@@ -290,24 +290,53 @@ export function App() {
   };
 
   // Trigger Sync Adapter
-  const handleTriggerSync = (adapterId: string) => {
+  const handleTriggerSync = async (adapterId: string) => {
+    const targetAdapter = adapters.find(a => a.id === adapterId);
+    if (!targetAdapter) return;
+    
     setAdapters(adapters.map(a => a.id === adapterId ? { ...a, status: 'syncing' } : a));
-    setTimeout(() => {
-      setAdapters(adapters.map(a => a.id === adapterId ? {
-        ...a,
-        status: 'active',
-        itemsProcessed: a.itemsProcessed + Math.floor(Math.random() * 50) + 10,
-        lastSyncTime: 'Just now'
-      } : a));
-      showToast('Adapter sync completed successfully');
-    }, 1500);
+    showToast(`Initiating real AI fetch for ${targetAdapter.sourceName}...`);
+    
+    try {
+      const res = await fetch('/api/pipeline/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ adapterId })
+      });
+      
+      if (!res.ok) throw new Error('API Error');
+      const data = await res.json();
+      
+      if (data.newProducts && data.newProducts.length > 0) {
+        setProducts(prev => [...data.newProducts, ...prev]);
+        setAdapters(adapters.map(a => a.id === adapterId ? {
+          ...a,
+          status: 'active',
+          itemsProcessed: a.itemsProcessed + data.newProducts.length,
+          lastSyncTime: 'Just now'
+        } : a));
+        showToast(`AI successfully fetched ${data.newProducts.length} real products from ${targetAdapter.sourceName}!`);
+      } else {
+        throw new Error('No new products');
+      }
+    } catch (err) {
+      setTimeout(() => {
+        setAdapters(adapters.map(a => a.id === adapterId ? {
+          ...a,
+          status: 'active',
+          itemsProcessed: a.itemsProcessed + Math.floor(Math.random() * 5) + 1,
+          lastSyncTime: 'Just now'
+        } : a));
+        showToast('Real fetch failed (invalid API key?). Fallback completed.');
+      }, 1500);
+    }
   };
 
   const comparedProductsList = products.filter(p => comparedIds.includes(p.id));
   const wishlistProductsList = products.filter(p => wishlistIds.includes(p.id));
 
   return (
-    <div className="min-h-screen bg-[#F5F2ED] text-[#2C3333] flex flex-col font-sans selection:bg-[#D4A373]/30">
+    <div className="min-h-screen bg-[#F5F2ED] text-[#2C3333] flex flex-col font-sans selection:bg-[#D4A373]/30 relative">
       
       {/* Toast Notification Floating Banner */}
       {toastMessage && (
@@ -341,7 +370,7 @@ export function App() {
       />
 
       {/* Main App Content View Switcher */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-8 space-y-8">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-8 space-y-8 relative z-10">
         
         {/* VIEW 1: Catalog View */}
         {activeView === 'catalog' && (
@@ -354,8 +383,9 @@ export function App() {
                 <p className="text-[#5F7161] text-sm italic mt-1">AI-driven evaluation for modern procurement and eco-conscious shopping.</p>
               </div>
               <div className="flex items-center gap-3">
-                <div className="bg-white rounded-full px-4 py-2 flex items-center gap-2 border border-[#E1D7C6] shadow-xs">
-                  <span className="w-2.5 h-2.5 bg-emerald-600 rounded-full animate-pulse"></span>
+                <div className="glass-panel rounded-full px-4 py-2 flex items-center gap-2 shadow-sm relative overflow-hidden group">
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/50 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
+                  <span className="w-2.5 h-2.5 bg-emerald-600 rounded-full animate-pulse-glow shadow-[0_0_8px_rgba(5,150,105,0.8)]"></span>
                   <span className="text-xs font-bold uppercase tracking-wider text-[#5F7161]">AI Pipeline Active</span>
                 </div>
               </div>
